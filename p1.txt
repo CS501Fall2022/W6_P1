@@ -1,0 +1,31 @@
+This fragment does not exist in R.java.
+This is because fragments are usually created and basically inserted into a view (layout) which persists with/without a fragment inside it.
+The fragment is never a view in itself so findViewById will never work. 
+
+getSupportFragmentManager is used to facilitate backwards compatibility with older API versions. Since this is entirely newer API code, we don't need it. 
+Additionally, we did not import the class. We imported a different fragment class (there are... too many).
+
+We add transactions to the backstack in order to be able to 'reverse' changes. 
+If we call addToBackStack, any fragments removed in the transaction is stopped and resumed when the changes are reversed (popBackStack is called)
+If we do not call addToBackStack, such changes are not saved and fragments are instead destroyed.
+
+We should check if f1 is null and reinstantiate it like is done for f2 for both f1 and f3. 
+even though we do not check if f1 is null, when we first run the code, it is created. we can be sure that f1 always exists the first time.
+
+When we try to navigate back to f1, however, since we do not call popBackStack, f1 is never resumed and bad stuff happens.
+
+
+if you click showFrag1 before clicking showFrag2, f2 will not be visible because it is hidden.
+calling the hide() function on a fragment does not destroy it, it actually just makes it invisible while remaining in the resume state. 
+Since we replace the view with f2 in showFrag2 (from f1) and no not call popBackStack, clicking the frag1 button has no visible effect. (f2 will remain there, just invisible)
+
+clicking showFrag3 breaks things because we do not replace the view with f3. we detach f1 or f2, which destroys the view. In effect, we prevent any fragment from being placed there.
+Furthermore, even if we disable the detach() calls, attach() does nothing. This is because attach() is only meant to work with fragments which have been passed to detach().
+Basically, this is the wrong tool for this job. 
+
+
+In short: we are doing the wrong operations to fragments when we just want to be calling replace() and using add/pop with the back stack. 
+hide/show is useful for when you need fragments to only be visible sometimes, and attach/detach is an alternative to the backstack which I don't entirely understand the value of. 
+
+
+To fix these fragments, I simply switch everything to replace the view. The backstack isn't really necessary here either, so I didn't include new calls to it. 
